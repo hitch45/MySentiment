@@ -1,36 +1,34 @@
 package com.xamarin.azuredevdays;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.app.Dialog;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+
+import com.google.gson.Gson;
+import com.microsoft.appcenter.AppCenter;
+import com.microsoft.appcenter.analytics.Analytics;
+import com.microsoft.appcenter.crashes.Crashes;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.gson.Gson;
-
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Request;
 import okhttp3.Response;
-
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
@@ -49,6 +47,9 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppCenter.setLogLevel(Log.VERBOSE);
+        AppCenter.start(getApplication(), "cf375eae-470a-4410-9733-a8a096fec51d",
+                Analytics.class, Crashes.class);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -114,7 +115,14 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 getSentimentButton.setEnabled(false);
                 sentimentText.setEnabled(false);
                 try {
-                    sentimentClient.GetSentimentResult(sentimentText.getText().toString(),
+                    String sentiment = sentimentText.getText().toString();
+
+                    Map<String, String> properties = new HashMap<>();
+                    properties.put("Sentiment", sentiment);
+
+                    Analytics.trackEvent("Sentiment sent", properties);
+
+                    sentimentClient.GetSentimentResult(sentiment,
                             new Callback() {
                                 @Override
                                 public void onFailure(Call call, IOException e) {
